@@ -11,15 +11,21 @@ def get_group_query(group_id):
     return GROUPME_API_URL + "/groups/" + str(group_id) + "/members/add" +\
            "?token=" + ACCESS_TOKEN
 
+def isNumber(number):
+    return len(format_numbers(number)) >= 9
+
+def isEmail(email):
+    return '@' in email
 
 def format_numbers(number):
     all_numbers = [str(i) for i in range(10)]
     return ''.join([str(n) for n in number if str(n) in all_numbers])
 
-
 def csv_to_json(roster):
     with open(roster, 'rt') as csvfile:
+
         members = list(csv.reader(csvfile))[0]
+
         members_data = []
 
         for member in members:
@@ -27,13 +33,18 @@ def csv_to_json(roster):
             if member == '':
                 continue
 
-            number = format_numbers(member)
-            new_groupme_member = {'phone_number': number}
-            members_data.append(new_groupme_member)
+            if isNumber(member):
+                number = format_numbers(member)
+                new_groupme_member = {'phone_number': number}
+                members_data.append(new_groupme_member)
+            elif isEmail(member):
+                new_groupme_member = {'email': member}
+                members_data.append(new_groupme_member)
 
     wrapper = {'members': members_data}
     json_members = json.dumps(wrapper)
     return json_members
+
 
 
 def add_members(group_id, roster):

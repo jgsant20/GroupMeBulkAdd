@@ -1,5 +1,5 @@
 # Access token for your GroupMe acc.    (CHANGE THIS)
-ACCESS_TOKEN = '0000000000000000000000000000000000000000'
+ACCESS_TOKEN = 'qbK6SesJpBmIe6v6Z2XtENXIJsUChuQ60oanFXDe'
 
 # GroupMe API URL
 GROUPME_API_URL = "https://api.groupme.com/v3"
