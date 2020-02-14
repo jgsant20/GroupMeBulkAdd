@@ -6,34 +6,43 @@ import sys
 
 def run():
     """Run this if you're not sure of the GroupID or the CSV file name"""
+
+    print("Choose what you want to do?\n"
+          "[0]: Read CSV file of contact information to add to a group in GroupMe.\n"
+          "[1]: Mention everyone in a group.")
+
+    choice = int(input("Choose function to run: "))
+    while not (0 <= choice < 2):
+        choice = int(input('Choose an input from (0 - {}): '.format(1)))
+    print("\n")
+
     list_of_groups = get_all_groups(QUERY)
-    list_of_csvfiles = get_all_csvfiles()
     group_info = choose_group(list_of_groups)
-    group_id = group_info[1]
-    roster = choose_roster(list_of_csvfiles)
+    group_id = group_info["group_id"]
+    group_members = group_info["members"]
 
-    while True:
-        print("The numbers within '{}' will be added to {}".format(roster, group_info))
+    # BulkAdd
+    if choice == 0:
+        list_of_csvfiles = get_all_csvfiles()
+        roster = choose_roster(list_of_csvfiles)
 
-        if input('Please Confirm (y/n): ') == 'y':
-            break
+        while True:
+            print("The numbers within '{}' will be added to {}".format(roster, group_info))
 
+            if input('Please Confirm (y/n): ') == 'y':
+                add_members(group_id, roster)
+                break
+            else:
+                sys.exit(1)
+
+    # Mention everyone in a group
+    elif choice == 1:
+        at_all(group_id, group_members, "testo")
+
+    # Just exit lol
+    else:
+        print("aborting...")
         sys.exit(1)
-
-    add_members(group_id, roster)
-
-
-def quick_run(group_id, roster):
-    try:
-        add_members(group_id, roster)
-        print("Successfully added members in '{}' to {}".format(roster, group_id))
-    except Exception as e:
-        print("{}: Members from '{}' unsuccessfully added to {}".format(e, roster, group_id))
-
-
-def bulk_run():
-    for group_id, roster in DATA:
-        quick_run(group_id, roster)
 
 
 if __name__ == '__main__':
