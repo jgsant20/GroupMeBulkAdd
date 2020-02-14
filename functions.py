@@ -18,7 +18,7 @@ def get_group_send_query(group_id):
 
 
 def is_phone_number(number):
-    return len(format_numbers(number)) >= 9
+    return len(format_phone_numbers(number)) >= 9
 
 
 def is_email(email):
@@ -58,17 +58,6 @@ def csv_to_json(roster):
     return json_members
 
 
-#   {'message': ['attachments': ['type':'mentions', ]]}
-def add_members(group_id, roster):
-    """ Adds members from roster to unique GroupMe group determined by 'group_id'
-    :param group_id: [int] Unique group id
-    :param roster: [String] Directory to csv file
-    """
-    json_members = csv_to_json(roster)
-    query = get_group_add_query(group_id)
-    requests.post(query, data=json_members)
-
-
 def get_all_groups(query):
     """ Queries GroupMe server for data and returns a list of group information
     :param query: [String] Query link
@@ -80,8 +69,8 @@ def get_all_groups(query):
 
 
 def choose_group(list_of_groups):
-    for i, (name, id) in enumerate(list_of_groups):
-        print("[{}]: {}, '{}'".format(i, id, name))
+    for i in range(len(list_of_groups)):
+        print("[{}]: {}, '{}'".format(i, list_of_groups[i]["group_id"], list_of_groups[i]["name"]))
 
     choice = int(input('\nChoose Group to run functions with: '))
     while not (0 <= choice < len(list_of_groups)):
@@ -113,14 +102,36 @@ def choose_roster(list_of_csvfiles):
     return csv_name
 
 
-def at_all(group_id, group_members, message_to_send):
-    qry = get_group_send_query(group_id)
+""" GroupMe functions are written below.
+"""
+
+
+#   {'message': ['attachments': ['type':'mentions', ]]}
+def add_members(group_id, roster):
+    """ Adds members from roster to unique GroupMe group determined by 'group_id'
+    :param group_id: [int] Unique group id
+    :param roster: [String] Directory to csv file
+    """
+    json_members = csv_to_json(roster)
+    query = get_group_add_query(group_id)
+    requests.post(query, data=json_members)
+
+
+def at_all(group_id, group_members, message_to_send, is_before_mentions=True):
+    """ Mentions everyone within a group and sends a message at the end
+    :param group_id: [int] Unique group id
+    :param group_members: [List] List of group members within group from unique group id
+    :param message_to_send: [String] Message to send
+    :param is_before_mentions: [bool] If true, message will be sent before mentions. Else, message will be sent after.
+    """
+
+    query = get_group_send_query(group_id)
     user_ids = []
     loci = []
     text = ''
     msg_len = 0
 
-    if len(message_to_send) != 0:
+    if len(message_to_send) != 0 and is_before_mentions:
         text += message_to_send + ' '
         msg_len += len(message_to_send) + 1
 
@@ -130,14 +141,20 @@ def at_all(group_id, group_members, message_to_send):
         msg_len += len(m['nickname']) + 2
         user_ids.append(m['user_id'])
 
+        # Sends a message before character limit (1000) is reached
         if msg_len >= 950:
-            requests.post(qry, json={
+            requests.post(query, json={
                 "message": {"text": text, "attachments": [{'loci': loci, 'type': 'mentions', 'user_ids': user_ids}]}})
             user_ids = []
             loci = []
             text = ''
             msg_len = 0
 
+    # We do this in-case the file in case there are remaining members to be mentioned after all members are read
     if msg_len < 950:
         data = {"message": {"text": text, "attachments": [{'loci': loci, 'type': 'mentions', 'user_ids': user_ids}]}}
-        requests.post(qry, json=data)
+        requests.post(query, json=data)
+
+    if len(message_to_send) != 0 and not is_before_mentions:
+        data = {"message": {"text": message_to_send}}
+        requests.post(query, json=data)

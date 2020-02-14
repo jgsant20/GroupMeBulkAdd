@@ -26,23 +26,28 @@ def run():
         list_of_csvfiles = get_all_csvfiles()
         roster = choose_roster(list_of_csvfiles)
 
-        while True:
-            print("The numbers within '{}' will be added to {}".format(roster, group_info))
+        print("The numbers within '{}' will be added to ({}, {})"
+              .format(roster, group_info["group_id"], group_info["name"]))
 
-            if input('Please Confirm (y/n): ') == 'y':
-                add_members(group_id, roster)
-                break
-            else:
-                sys.exit(1)
+        if input('Please Confirm (y/n): ') == 'y':
+            add_members(group_id, roster)
+        else:
+            sys.exit(1)
 
     # Mention everyone in a group
     elif choice == 1:
-        at_all(group_id, group_members, "testo")
+        print("All the members in the group will be mentioned and the following message will be sent: ")
+        print(message + '\n')
+
+        if input('Please Confirm (y/n): ') == 'y':
+            at_all(group_id, group_members, message, is_before_mention)
+        else:
+            sys.exit(2)
 
     # Just exit lol
     else:
         print("aborting...")
-        sys.exit(1)
+        sys.exit(3)
 
 
 if __name__ == '__main__':
